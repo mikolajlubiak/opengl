@@ -1,6 +1,6 @@
 
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 
 #include <GLFW/glfw3.h>
 
@@ -46,7 +46,7 @@ int main() {
 
   // glad: load all OpenGL function pointers
   // ---------------------------------------
-  if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
+  if (!gladLoadGL()) {
     std::cout << "Failed to initialize GLAD" << std::endl;
     return -1;
   }
