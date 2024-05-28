@@ -1,6 +1,5 @@
+#version 460
 
-
-#version 330 core
 out vec4 FragColor;
 
 in vec3 ourColor;
@@ -14,7 +13,6 @@ uniform float mix_val;
 
 void main()
 {
-    vec3 col = ourColor * (sin(time) + 1.0);
     FragColor = mix(texture(texture1, TexCoord), texture(texture2, vec2(-TexCoord.x, TexCoord.y)), mix_val);
 
 }
