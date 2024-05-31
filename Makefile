@@ -1,7 +1,7 @@
 LDFLAGS := -lglfw
 
-opengl:
-	g++ *.cpp *.c $(LDFLAGS)
+debug:
+	g++ *.cpp *.c $(LDFLAGS) --debug -o opengl
 
 clean:
 	rm a.out
