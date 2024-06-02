@@ -32,7 +32,7 @@ private:
 
   // camera vertices
   glm::vec3 camera_pos{0.0f};
-  glm::vec3 camera_front;
+  glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
   constexpr static const glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
   constexpr static const float camera_speed = 5.0f;
 
@@ -41,6 +41,7 @@ private:
   float last_y = SCR_HEIGHT / 2.0f;
   float yaw, pitch = 0.0f;
   bool first_mouse_movement = true;
+  float fov = 45.0f;
 
   // time
   float time = glfwGetTime();
@@ -111,6 +112,7 @@ private:
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // init opengl
@@ -224,10 +226,6 @@ private:
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glEnable(GL_DEPTH_TEST);
 
-    proj = glm::perspective(glm::radians(45.0f),
-                            static_cast<float>(SCR_WIDTH) / SCR_HEIGHT, 0.1f,
-                            100.0f);
-
     return 0;
   }
 
@@ -244,6 +242,10 @@ private:
 
       // vector and matrix manipulation
       view = glm::lookAt(camera_pos, camera_pos + camera_front, camera_up);
+
+      proj = glm::perspective(glm::radians(fov),
+                              static_cast<float>(SCR_WIDTH) / SCR_HEIGHT, 0.1f,
+                              100.0f);
 
       // update grid
       timer -= delta_time;
@@ -369,7 +371,7 @@ private:
     ths->last_x = xpos;
     ths->last_y = ypos;
 
-    const float sensitivity = 0.1f;
+    constexpr const float sensitivity = 0.1f;
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 
@@ -386,6 +388,18 @@ private:
     direction.y = sin(glm::radians(ths->pitch));
     direction.z = sin(glm::radians(ths->yaw)) * cos(glm::radians(ths->pitch));
     ths->camera_front = glm::normalize(direction);
+  }
+
+  static void scroll_callback(GLFWwindow *window, double xoffset,
+                              double yoffset) {
+    lrnOpenGL *ths =
+        reinterpret_cast<lrnOpenGL *>(glfwGetWindowUserPointer(window));
+
+    ths->fov -= static_cast<float>(yoffset * 2.0f);
+    if (ths->fov < 1.0f)
+      ths->fov = 1.0f;
+    if (ths->fov > 90.0f)
+      ths->fov = 90.0f;
   }
 };
 
