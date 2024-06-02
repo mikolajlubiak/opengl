@@ -25,16 +25,22 @@ private:
 
   // input
   float mix = 0.5f;
-  glm::vec3 camera_pos{0.0f};
 
   // game of life
   std::array<std::array<std::array<bool, GRID_SIZE>, GRID_SIZE>, GRIDS_NUM>
       grids{};
 
   // camera vertices
-  constexpr static const glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
+  glm::vec3 camera_pos{0.0f};
+  glm::vec3 camera_front;
   constexpr static const glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
   constexpr static const float camera_speed = 5.0f;
+
+  // mouse
+  float last_x = SCR_WIDTH / 2.0f;
+  float last_y = SCR_HEIGHT / 2.0f;
+  float yaw, pitch = 0.0f;
+  bool first_mouse_movement = true;
 
   // time
   float time = glfwGetTime();
@@ -43,7 +49,7 @@ private:
   float timer = 1.0f;
 
   // matrices
-  glm::mat4 model = glm::mat4(1.0f);
+  glm::mat4 model;
   glm::mat4 view;
   glm::mat4 proj;
 
@@ -102,7 +108,10 @@ private:
     }
 
     glfwMakeContextCurrent(window);
+    glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // init opengl
     if (!gladLoadGL()) {
@@ -146,6 +155,7 @@ private:
     glGenTextures(1, &texture1);
     glGenTextures(1, &texture2);
 
+    // texture 1
     glBindTexture(GL_TEXTURE_2D, texture1);
 
     // texture wrapping parameters
@@ -158,10 +168,10 @@ private:
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // load image data
-    int width1, height1, nrChannels1;
+    int width1, height1, nr_channels1;
     stbi_set_flip_vertically_on_load(true);
     unsigned char *data =
-        stbi_load("container.jpg", &width1, &height1, &nrChannels1, 0);
+        stbi_load("container.jpg", &width1, &height1, &nr_channels1, 0);
 
     if (data) {
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB,
@@ -173,6 +183,7 @@ private:
       return 3;
     }
 
+    // texture 2
     glBindTexture(GL_TEXTURE_2D, texture2);
 
     // texture wrapping parameters
@@ -184,8 +195,8 @@ private:
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // load image data
-    int width2, height2, nrChannels2;
-    data = stbi_load("awesomeface.png", &width2, &height2, &nrChannels2, 0);
+    int width2, height2, nr_channels2;
+    data = stbi_load("awesomeface.png", &width2, &height2, &nr_channels2, 0);
 
     if (data) {
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width2, height2, 0, GL_RGBA,
@@ -214,7 +225,7 @@ private:
     glEnable(GL_DEPTH_TEST);
 
     proj = glm::perspective(glm::radians(45.0f),
-                            static_cast<float>(SCR_WIDTH / SCR_HEIGHT), 0.1f,
+                            static_cast<float>(SCR_WIDTH) / SCR_HEIGHT, 0.1f,
                             100.0f);
 
     return 0;
@@ -341,6 +352,40 @@ private:
         }
       }
     }
+  }
+
+  static void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
+    lrnOpenGL *ths =
+        reinterpret_cast<lrnOpenGL *>(glfwGetWindowUserPointer(window));
+
+    if (ths->first_mouse_movement) {
+      ths->last_x = xpos;
+      ths->last_y = ypos;
+      ths->first_mouse_movement = false;
+    }
+
+    float xoffset = xpos - ths->last_x;
+    float yoffset = ths->last_y - ypos;
+    ths->last_x = xpos;
+    ths->last_y = ypos;
+
+    const float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    ths->yaw += xoffset;
+    ths->pitch += yoffset;
+
+    if (ths->pitch > 89.0f)
+      ths->pitch = 89.0f;
+    if (ths->pitch < -89.0f)
+      ths->pitch = -89.0f;
+
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(ths->yaw)) * cos(glm::radians(ths->pitch));
+    direction.y = sin(glm::radians(ths->pitch));
+    direction.z = sin(glm::radians(ths->yaw)) * cos(glm::radians(ths->pitch));
+    ths->camera_front = glm::normalize(direction);
   }
 };
 
