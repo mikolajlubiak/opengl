@@ -80,7 +80,7 @@ private:
       0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
       -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
 
-  void init() {
+  uint8_t init() {
     // init glfw
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -98,7 +98,7 @@ private:
     if (window == NULL) {
       std::cerr << "Failed to create GLFW window\n";
       glfwTerminate();
-      return;
+      return 1;
     }
 
     glfwMakeContextCurrent(window);
@@ -108,7 +108,7 @@ private:
     if (!gladLoadGL()) {
       std::cerr << "Failed to initialize GLAD\n";
       glfwTerminate();
-      return;
+      return 2;
     }
 
     shader.init("shader.vert", "shader.frag");
@@ -170,7 +170,7 @@ private:
       glGenerateMipmap(GL_TEXTURE_2D);
     } else {
       std::cerr << "Failed to load texture\n";
-      return;
+      return 3;
     }
 
     glBindTexture(GL_TEXTURE_2D, texture2);
@@ -194,7 +194,7 @@ private:
       glGenerateMipmap(GL_TEXTURE_2D);
     } else {
       std::cerr << "Failed to load texture\n";
-      return;
+      return 3;
     }
     stbi_image_free(data);
 
@@ -216,6 +216,8 @@ private:
     proj = glm::perspective(glm::radians(45.0f),
                             static_cast<float>(SCR_WIDTH / SCR_HEIGHT), 0.1f,
                             100.0f);
+
+    return 0;
   }
 
   void render_loop() {
@@ -276,7 +278,10 @@ private:
 
 public:
   void run() {
-    init();
+    if (init() != 0) {
+      std::cerr << "ERROR\n";
+      return;
+    }
 
     render_loop();
 
