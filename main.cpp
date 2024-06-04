@@ -17,21 +17,12 @@ private:
   // settings
   constexpr static const unsigned int SCR_WIDTH = 1280;
   constexpr static const unsigned int SCR_HEIGHT = 720;
-  constexpr static const uint32_t GRID_SIZE = 100;
-  constexpr static const uint32_t GRIDS_NUM = 5;
 
   // window
   GLFWwindow *window;
 
-  // input
-  float mix = 0.5f;
-
-  // game of life
-  std::array<std::array<std::array<bool, GRID_SIZE>, GRID_SIZE>, GRIDS_NUM>
-      grids{};
-
   // camera vertices
-  glm::vec3 camera_pos{0.0f};
+  glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
   glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
   constexpr static const glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
   constexpr static const float camera_speed = 5.0f;
@@ -47,45 +38,39 @@ private:
   float time = glfwGetTime();
   float old_time;
   float delta_time;
-  float timer = 1.0f;
 
   // matrices
   glm::mat4 model;
   glm::mat4 view;
-  glm::mat4 proj;
+  glm::mat4 projection;
 
   // shader program
   Shader shader;
+  Shader light_shader;
 
   // opengl state machine
-  unsigned int VBO, VAO;
-  unsigned int texture1, texture2;
+  unsigned int VBO, VAO, light_VAO;
 
   // vertex data
   constexpr static const float vertices[] = {
-      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
-      0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
-      -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+      -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  0.5f,  -0.5f,
+      0.5f,  0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f, -0.5f,
 
-      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
-      0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-      -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
+      -0.5f, -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,
+      0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, -0.5f, 0.5f,
 
-      -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,
+      -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f, -0.5f,
+      -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,
 
-      0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
-      0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 0.0f, 1.0f,
-      0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+      0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f,
+      0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,
 
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 1.0f,
-      0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
-      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+      -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,
+      0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f,
 
-      -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
-      0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-      -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
+      -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,
+      0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f,
+  };
 
   uint8_t init() {
     // init glfw
@@ -123,104 +108,28 @@ private:
     }
 
     shader.init("shader.vert", "shader.frag");
-
-    // game of life
-    grids[0][0][1] = true;
-    grids[0][1][3] = true;
-    grids[0][2][0] = true;
-    grids[0][2][1] = true;
-    grids[0][2][4] = true;
-    grids[0][2][5] = true;
-    grids[0][2][6] = true;
-
-    // init vertex buffers
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
+    light_shader.init("light_shader.vert", "light_shader.frag");
 
     // vertex buffer
+    glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // vertex pos
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+    // object VAO
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
                           (void *)0);
     glEnableVertexAttribArray(0);
 
-    // texture attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    // light VAO
+    glGenVertexArrays(1, &light_VAO);
+    glBindVertexArray(light_VAO);
 
-    // create textures
-    glGenTextures(1, &texture1);
-    glGenTextures(1, &texture2);
-
-    // texture 1
-    glBindTexture(GL_TEXTURE_2D, texture1);
-
-    // texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    // texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_NEAREST_MIPMAP_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    // load image data
-    int width1, height1, nr_channels1;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char *data =
-        stbi_load("container.jpg", &width1, &height1, &nr_channels1, 0);
-
-    if (data) {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB,
-                   GL_UNSIGNED_BYTE, data);
-      // generate mipmap
-      glGenerateMipmap(GL_TEXTURE_2D);
-    } else {
-      std::cerr << "Failed to load texture\n";
-      return 3;
-    }
-
-    // texture 2
-    glBindTexture(GL_TEXTURE_2D, texture2);
-
-    // texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_NEAREST_MIPMAP_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    // load image data
-    int width2, height2, nr_channels2;
-    data = stbi_load("awesomeface.png", &width2, &height2, &nr_channels2, 0);
-
-    if (data) {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width2, height2, 0, GL_RGBA,
-                   GL_UNSIGNED_BYTE, data);
-      // generate mipmap
-      glGenerateMipmap(GL_TEXTURE_2D);
-    } else {
-      std::cerr << "Failed to load texture\n";
-      return 3;
-    }
-    stbi_image_free(data);
-
-    // bind textures
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture1);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-
-    // set shader values
-    shader.use();
-    shader.setInt("texture1", 0);
-    shader.setInt("texture2", 1);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(0);
 
     // opengl state machine
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -231,6 +140,9 @@ private:
 
   void render_loop() {
     while (!glfwWindowShouldClose(window)) {
+      // clear color and depth  buffers
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
       // input
       glfwPollEvents();
       processInput();
@@ -241,44 +153,42 @@ private:
       delta_time = time - old_time;
 
       // vector and matrix manipulation
+      model = glm::mat4(1.0f);
+
       view = glm::lookAt(camera_pos, camera_pos + camera_front, camera_up);
 
-      proj = glm::perspective(glm::radians(fov),
-                              static_cast<float>(SCR_WIDTH) / SCR_HEIGHT, 0.1f,
-                              100.0f);
+      projection = glm::perspective(glm::radians(fov),
+                                    static_cast<float>(SCR_WIDTH) / SCR_HEIGHT,
+                                    0.1f, 100.0f);
 
-      // update grid
-      timer -= delta_time;
-      if (timer < 0.0f) {
-        timer = 1.0f;
-        for (uint32_t i = 0; i < GRIDS_NUM; i++) {
-          game_of_live(grids[i]);
-        }
-      }
-
-      // setting shader values
-      shader.setFloat("mix_val", mix);
+      // setting object shader values
+      shader.use();
+      shader.setVec3("object_color", 1.0f, 0.5f, 0.31f);
+      shader.setVec3("light_color", 1.0f, 1.0f, 1.0f);
+      shader.setMat4("model", model);
       shader.setMat4("view", view);
-      shader.setMat4("proj", proj);
+      shader.setMat4("projection", projection);
 
-      // render
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      // draw object
+      glBindVertexArray(VAO);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
 
-      for (uint32_t i = 0; i < GRIDS_NUM; i++) {
-        for (unsigned int j = 0; j < GRID_SIZE; j++) {
-          for (unsigned int k = 0; k < GRID_SIZE; k++) {
-            if (grids[i][j][k]) {
-              glm::mat4 model = glm::mat4(1.0f);
-              model = glm::translate(model, {j * 2, i * 3, k * 2});
-              shader.setMat4("model", model);
+      // manipulate light model matrix
+      model = glm::translate(model, {1.2f, 1.0f, 2.0f});
+      model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
 
-              glDrawArrays(GL_TRIANGLES, 0, 36);
-            }
-          }
-        }
-      }
+      // set light shader values
+      light_shader.use();
+      light_shader.setVec3("light_color", 1.0f, 1.0f, 1.0f);
+      light_shader.setMat4("model", model);
+      light_shader.setMat4("view", view);
+      light_shader.setMat4("projection", projection);
 
-      // draw frame
+      // draw light
+      glBindVertexArray(light_VAO);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+
+      // render frame
       glfwSwapBuffers(window);
     }
   }
@@ -305,12 +215,6 @@ private:
   void processInput() {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
       glfwSetWindowShouldClose(window, true);
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-      if (mix < 1.0f)
-        mix += 0.01f;
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-      if (mix > 0.0f)
-        mix -= 0.01f;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
       camera_pos += camera_front * camera_speed * delta_time;
@@ -327,33 +231,6 @@ private:
   static void framebuffer_size_callback(GLFWwindow *window, int width,
                                         int height) {
     glViewport(0, 0, width, height);
-  }
-
-  void game_of_live(std::array<std::array<bool, GRID_SIZE>, GRID_SIZE> &grid) {
-    std::array<std::array<bool, GRID_SIZE>, GRID_SIZE> temp_grid;
-    std::copy(std::begin(grid), std::end(grid), std::begin(temp_grid));
-
-    for (int a = 1; a < GRID_SIZE - 1; a++) {
-      for (int b = 1; b < GRID_SIZE - 1; b++) {
-        int alive = 0;
-        for (int c = -1; c < 2; c++) {
-          for (int d = -1; d < 2; d++) {
-            if (!(c == 0 && d == 0)) {
-              if (temp_grid[a + c][b + d]) {
-                ++alive;
-              }
-            }
-          }
-        }
-        if (alive < 2) {
-          grid[a][b] = false;
-        } else if (alive == 3) {
-          grid[a][b] = true;
-        } else if (alive > 3) {
-          grid[a][b] = false;
-        }
-      }
-    }
   }
 
   static void mouse_callback(GLFWwindow *window, double xpos, double ypos) {

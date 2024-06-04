@@ -1,16 +1,11 @@
 #version 460
 
-layout (location = 0) out vec4 FragColor;
+out vec4 frag_color;
 
-layout (location = 0) in vec2 TexCoord;
-
-// texture sampler
-uniform sampler2D texture1;
-uniform sampler2D texture2;
-uniform float mix_val;
+uniform vec3 object_color;
+uniform vec3 light_color;
 
 void main()
 {
-    FragColor = mix(texture(texture1, TexCoord), texture(texture2, vec2(-TexCoord.x, TexCoord.y)), mix_val);
+    frag_color = vec4(light_color * object_color, 1.0);
 }
-
