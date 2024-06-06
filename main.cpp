@@ -177,14 +177,35 @@ private:
 
       // setting object shader values
       shader.use();
-      shader.setVec3("object_color", 1.0f, 0.5f, 0.31f);
-      shader.setVec3("light_color", 1.0f, 1.0f, 1.0f);
+
+      glm::vec3 light_color;
+      light_color.x = sin(time * 2.0f);
+      light_color.y = sin(time * 0.7f);
+      light_color.z = sin(time * 1.3f);
+
+      glm::vec3 diffuse_color = light_color * glm::vec3(0.5f);
+      glm::vec3 ambient_color = diffuse_color * glm::vec3(0.2f);
+
+      // material
+      shader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+      shader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+      shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+      shader.setFloat("material.shininess", 32.0f);
+
+      // light
+      shader.setVec3("light.ambient", ambient_color);
+      shader.setVec3("light.diffuse", diffuse_color);
+      shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+      shader.setVec3("light.position", light_pos);
+
+      // camera
+      shader.setVec3("camera_pos", camera_pos);
+
+      // matrices
       shader.setMat4("model", model);
       shader.setMat3("normal_matrix", glm::transpose(glm::inverse(model)));
       shader.setMat4("view", view);
       shader.setMat4("projection", projection);
-      shader.setVec3("light_pos", light_pos);
-      shader.setVec3("camera_pos", camera_pos);
 
       // draw object
       glBindVertexArray(VAO);
@@ -196,7 +217,7 @@ private:
 
       // set light shader values
       light_shader.use();
-      light_shader.setVec3("light_color", 1.0f, 1.0f, 1.0f);
+      light_shader.setVec3("light_color", light_color);
       light_shader.setMat4("model", model);
       light_shader.setMat4("view", view);
       light_shader.setMat4("projection", projection);
