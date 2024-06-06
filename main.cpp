@@ -45,7 +45,7 @@ private:
   Shader shader;
   Shader light_shader;
 
-  constexpr static const glm::vec3 light_pos = glm::vec3(1.2f, 1.0f, 2.0f);
+  glm::vec3 light_pos = glm::vec3(1.2f, 1.0f, 2.0f);
 
   // opengl state machine
   unsigned int VBO, VAO, light_VAO;
@@ -177,6 +177,9 @@ private:
 
       // setting object shader values
       shader.use();
+
+      light_pos.x = 1.0f + sin(time) * 2.0f;
+      light_pos.y = sin(time / 2.0f) * 1.0f;
 
       glm::vec3 light_color;
       light_color.x = sin(time * 2.0f);
