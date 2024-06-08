@@ -213,11 +213,9 @@ private:
       // setting object shader values
       shader.use();
 
-      /*
       glm::vec3 light_pos = glm::vec3(0.0f, 0.0f, 0.0f);
       light_pos.x = 1.0f + sin(time) * 2.0f;
       light_pos.y = sin(time / 2.0f) * 1.0f;
-      */
 
       glm::vec3 light_color;
       light_color.x = sin(time * 2.0f);
@@ -231,7 +229,10 @@ private:
       shader.setVec3("light.ambient", ambient_color);
       shader.setVec3("light.diffuse", diffuse_color);
       shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-      shader.setVec4("light.vector", -0.2f, -1.0f, -0.3f, 0.0f);
+      shader.setVec4("light.vector", glm::vec4(light_pos, 1.0f));
+      shader.setFloat("light.constant",  1.0f);
+      shader.setFloat("light.linear",    0.09f);
+      shader.setFloat("light.quadratic", 0.032f);
 
       // camera
       shader.setVec3("camera_pos", camera_pos);
@@ -259,7 +260,6 @@ private:
         glDrawArrays(GL_TRIANGLES, 0, 36);
       }
 
-      /*
       // manipulate light model matrix
       model = glm::translate(model, light_pos);
       model = glm::scale(model, glm::vec3(0.2f));
@@ -274,7 +274,6 @@ private:
       // draw light
       glBindVertexArray(light_VAO);
       glDrawArrays(GL_TRIANGLES, 0, 36);
-      */
 
       // render frame
       glfwSwapBuffers(window);
