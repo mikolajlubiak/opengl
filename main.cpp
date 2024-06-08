@@ -48,8 +48,6 @@ private:
   Shader shader;
   Shader light_shader;
 
-  glm::vec3 light_pos = glm::vec3(1.2f, 1.0f, 2.0f);
-
   // opengl state machine
   unsigned int VBO, VAO, light_VAO;
   unsigned int diffuse_map, specular_map;
@@ -215,8 +213,11 @@ private:
       // setting object shader values
       shader.use();
 
+      /*
+      glm::vec3 light_pos = glm::vec3(0.0f, 0.0f, 0.0f);
       light_pos.x = 1.0f + sin(time) * 2.0f;
       light_pos.y = sin(time / 2.0f) * 1.0f;
+      */
 
       glm::vec3 light_color;
       light_color.x = sin(time * 2.0f);
