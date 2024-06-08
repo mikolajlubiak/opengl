@@ -92,6 +92,13 @@ private:
       1.0f,  0.0f,  -0.5f, 0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
       -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.0f,  1.0f};
 
+  constexpr static const glm::vec3 cube_positions[] = {
+      glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
+      glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
+      glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
+      glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
+      glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
+
   uint8_t init() {
     // init glfw
     glfwInit();
@@ -223,21 +230,35 @@ private:
       shader.setVec3("light.ambient", ambient_color);
       shader.setVec3("light.diffuse", diffuse_color);
       shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-      shader.setVec3("light.position", light_pos);
+      shader.setVec4("light.vector", -0.2f, -1.0f, -0.3f, 0.0f);
 
       // camera
       shader.setVec3("camera_pos", camera_pos);
 
       // matrices
+      /*
       shader.setMat4("model", model);
       shader.setMat3("normal_matrix", glm::transpose(glm::inverse(model)));
+      */
       shader.setMat4("view", view);
       shader.setMat4("projection", projection);
 
       // draw object
       glBindVertexArray(VAO);
-      glDrawArrays(GL_TRIANGLES, 0, 36);
+      // glDrawArrays(GL_TRIANGLES, 0, 36);
+      for (unsigned int i = 0; i < 10; i++) {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, cube_positions[i]);
+        float angle = 20.0f * i;
+        model = glm::rotate(model, glm::radians(angle),
+                            glm::vec3(1.0f, 0.3f, 0.5f));
+        shader.setMat4("model", model);
+        shader.setMat3("normal_matrix", glm::transpose(glm::inverse(model)));
 
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+      }
+
+      /*
       // manipulate light model matrix
       model = glm::translate(model, light_pos);
       model = glm::scale(model, glm::vec3(0.2f));
@@ -252,6 +273,7 @@ private:
       // draw light
       glBindVertexArray(light_VAO);
       glDrawArrays(GL_TRIANGLES, 0, 36);
+      */
 
       // render frame
       glfwSwapBuffers(window);
