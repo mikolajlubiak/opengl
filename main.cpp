@@ -152,7 +152,7 @@ private:
                           (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                           (void *)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
@@ -229,9 +229,12 @@ private:
       shader.setVec3("light.ambient", ambient_color);
       shader.setVec3("light.diffuse", diffuse_color);
       shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-      shader.setVec4("light.vector", glm::vec4(light_pos, 1.0f));
-      shader.setFloat("light.constant",  1.0f);
-      shader.setFloat("light.linear",    0.09f);
+      shader.setVec3("light.position", camera_pos);
+      shader.setVec3("light.direction", camera_front);
+      shader.setFloat("light.cut_off", glm::cos(glm::radians(12.5f)));
+      shader.setFloat("light.outer_cut_off", glm::cos(glm::radians(15.0f)));
+      shader.setFloat("light.constant", 1.0f);
+      shader.setFloat("light.linear", 0.09f);
       shader.setFloat("light.quadratic", 0.032f);
 
       // camera
@@ -248,6 +251,7 @@ private:
       // draw object
       glBindVertexArray(VAO);
       // glDrawArrays(GL_TRIANGLES, 0, 36);
+
       for (unsigned int i = 0; i < 10; i++) {
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, cube_positions[i]);
@@ -260,6 +264,7 @@ private:
         glDrawArrays(GL_TRIANGLES, 0, 36);
       }
 
+      /*
       // manipulate light model matrix
       model = glm::translate(model, light_pos);
       model = glm::scale(model, glm::vec3(0.2f));
@@ -274,6 +279,7 @@ private:
       // draw light
       glBindVertexArray(light_VAO);
       glDrawArrays(GL_TRIANGLES, 0, 36);
+      */
 
       // render frame
       glfwSwapBuffers(window);
