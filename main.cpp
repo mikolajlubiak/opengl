@@ -10,13 +10,13 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-#include "shader.h"
+#include "shader.hpp"
 
 class lrnOpenGL {
 private:
   // settings
-  constexpr static unsigned int SCR_WIDTH = 1280;
-  constexpr static unsigned int SCR_HEIGHT = 720;
+  constexpr static uint32_t SCR_WIDTH = 1280;
+  constexpr static uint32_t SCR_HEIGHT = 720;
 
   // window
   GLFWwindow *window;
@@ -49,8 +49,8 @@ private:
   Shader light_shader;
 
   // opengl state machine
-  unsigned int VBO, VAO, light_VAO;
-  unsigned int diffuse_map, specular_map;
+  uint32_t VBO, VAO, light_VAO;
+  uint32_t diffuse_map, specular_map;
 
   // vertex data
   constexpr static float vertices[] = {
@@ -293,7 +293,7 @@ private:
 
       // draw object
       glBindVertexArray(VAO);
-      for (unsigned int i = 0; i < 10; i++) {
+      for (uint32_t i = 0; i < 10; i++) {
         model = glm::mat4(1.0f);
         model = glm::translate(model, cube_positions[i]);
         float angle = 20.0f * i;
@@ -313,7 +313,7 @@ private:
 
       // draw light
       glBindVertexArray(light_VAO);
-      for (unsigned int i = 0; i < 3; i++) {
+      for (uint32_t i = 0; i < 3; i++) {
         model = glm::mat4(1.0f);
         model = glm::translate(model, point_light_positions[i]);
         model = glm::scale(model, glm::vec3(0.2f));
@@ -420,8 +420,8 @@ private:
       ths->fov = 90.0f;
   }
 
-  unsigned int load_texture(char const *path) {
-    unsigned int textureID;
+  uint32_t load_texture(char const *path) {
+    uint32_t textureID;
     glGenTextures(1, &textureID);
 
     int width, height, nrComponents;
