@@ -15,8 +15,8 @@
 class lrnOpenGL {
 private:
   // settings
-  constexpr static const unsigned int SCR_WIDTH = 1280;
-  constexpr static const unsigned int SCR_HEIGHT = 720;
+  constexpr static unsigned int SCR_WIDTH = 1280;
+  constexpr static unsigned int SCR_HEIGHT = 720;
 
   // window
   GLFWwindow *window;
@@ -24,8 +24,8 @@ private:
   // camera vertices
   glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 0.0f);
   glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
-  constexpr static const glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
-  constexpr static const float camera_speed = 5.0f;
+  constexpr static glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
+  constexpr static float camera_speed = 5.0f;
 
   // mouse
   float last_x = SCR_WIDTH / 2.0f;
@@ -53,7 +53,7 @@ private:
   unsigned int diffuse_map, specular_map;
 
   // vertex data
-  constexpr static const float vertices[] = {
+  constexpr static float vertices[] = {
       -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  0.5f,  -0.5f,
       -0.5f, 0.0f,  0.0f,  -1.0f, 1.0f,  0.0f,  0.5f,  0.5f,  -0.5f, 0.0f,
       0.0f,  -1.0f, 1.0f,  1.0f,  0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f,
@@ -90,14 +90,14 @@ private:
       1.0f,  0.0f,  -0.5f, 0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
       -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.0f,  1.0f};
 
-  constexpr static const glm::vec3 cube_positions[] = {
+  constexpr static glm::vec3 cube_positions[] = {
       glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
       glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
       glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
       glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
       glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
 
-  constexpr static const glm::vec3 point_light_positions[] = {
+  constexpr static glm::vec3 point_light_positions[] = {
       glm::vec3(0.7f, 0.2f, 2.0f), glm::vec3(2.3f, -3.3f, -4.0f),
       glm::vec3(-4.0f, 2.0f, -12.0f)};
 
