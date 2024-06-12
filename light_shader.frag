@@ -1,6 +1,6 @@
 #version 460
 
-out vec4 frag_color;
+layout (location = 0) out vec4 frag_color;
 
 uniform vec3 light_color;
 
