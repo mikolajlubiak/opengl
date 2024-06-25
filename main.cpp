@@ -1,16 +1,15 @@
 #include <glad/glad.h>
 
-#include "model.hpp"
 #include "shader.hpp"
 
 #include <GLFW/glfw3.h>
+#include <array>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/matrix.hpp>
 #include <iostream>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
+#include <vector>
 
 class lrnOpenGL {
 private:
@@ -22,7 +21,7 @@ private:
   GLFWwindow *window;
 
   // camera vertices
-  glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 3.0f);
+  glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 15.0f);
   glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
   constexpr static glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
   constexpr static float camera_speed = 5.0f;
@@ -38,6 +37,7 @@ private:
   float time = glfwGetTime();
   float old_time;
   float delta_time;
+  float timer = 1.0f;
 
   // matrices
   glm::mat4 model;
@@ -46,51 +46,45 @@ private:
 
   // shader program
   Shader shader;
-  Shader light_shader;
 
   // opengl state machine
-  uint32_t VBO, light_VAO;
+  uint32_t VBO, VAO;
 
-  // backpack model
-  Model backpack;
+  // Conway's Game of Life
+  constexpr static uint32_t GRID_SIZE = 50;
+  std::vector<std::array<std::array<bool, GRID_SIZE>, GRID_SIZE>> grids{};
 
   // cube
   constexpr static float cube[] = {
-      -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  0.5f,  -0.5f,
-      -0.5f, 0.0f,  0.0f,  -1.0f, 1.0f,  0.0f,  0.5f,  0.5f,  -0.5f, 0.0f,
-      0.0f,  -1.0f, 1.0f,  1.0f,  0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f,
-      1.0f,  1.0f,  -0.5f, 0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f,  1.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,
+      -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.5f,  -0.5f, -0.5f,
+      0.0f,  0.0f,  -1.0f, 0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f,
+      0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, -0.5f, 0.5f,  -0.5f,
+      0.0f,  0.0f,  -1.0f, -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f,
 
-      -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.5f,  -0.5f,
-      0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,  0.5f,  0.5f,  0.5f,  0.0f,
-      0.0f,  1.0f,  1.0f,  1.0f,  0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-      1.0f,  1.0f,  -0.5f, 0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
-      -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+      -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  0.5f,  -0.5f, 0.5f,
+      0.0f,  0.0f,  1.0f,  0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+      0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  -0.5f, 0.5f,  0.5f,
+      0.0f,  0.0f,  1.0f,  -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,
 
-      -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f,  1.0f,  0.0f,  -0.5f, 0.5f,
-      -0.5f, -1.0f, 0.0f,  0.0f,  1.0f,  1.0f,  -0.5f, -0.5f, -0.5f, -1.0f,
-      0.0f,  0.0f,  0.0f,  1.0f,  -0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f,
-      0.0f,  1.0f,  -0.5f, -0.5f, 0.5f,  -1.0f, 0.0f,  0.0f,  0.0f,  0.0f,
-      -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
+      -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f,  -0.5f, 0.5f,  -0.5f,
+      -1.0f, 0.0f,  0.0f,  -0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f,
+      -0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f,  -0.5f, -0.5f, 0.5f,
+      -1.0f, 0.0f,  0.0f,  -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f,
 
-      0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.5f,  0.5f,
-      -0.5f, 1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  0.5f,  -0.5f, -0.5f, 1.0f,
-      0.0f,  0.0f,  0.0f,  1.0f,  0.5f,  -0.5f, -0.5f, 1.0f,  0.0f,  0.0f,
-      0.0f,  1.0f,  0.5f,  -0.5f, 0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-      0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+      0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.5f,  0.5f,  -0.5f,
+      1.0f,  0.0f,  0.0f,  0.5f,  -0.5f, -0.5f, 1.0f,  0.0f,  0.0f,
+      0.5f,  -0.5f, -0.5f, 1.0f,  0.0f,  0.0f,  0.5f,  -0.5f, 0.5f,
+      1.0f,  0.0f,  0.0f,  0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
 
-      -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,  0.0f,  1.0f,  0.5f,  -0.5f,
-      -0.5f, 0.0f,  -1.0f, 0.0f,  1.0f,  1.0f,  0.5f,  -0.5f, 0.5f,  0.0f,
-      -1.0f, 0.0f,  1.0f,  0.0f,  0.5f,  -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,
-      1.0f,  0.0f,  -0.5f, -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,  0.0f,  0.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,  0.0f,  1.0f,
+      -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,  0.5f,  -0.5f, -0.5f,
+      0.0f,  -1.0f, 0.0f,  0.5f,  -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,
+      0.5f,  -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,  -0.5f, -0.5f, 0.5f,
+      0.0f,  -1.0f, 0.0f,  -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,
 
-      -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.5f,  0.5f,
-      -0.5f, 0.0f,  1.0f,  0.0f,  1.0f,  1.0f,  0.5f,  0.5f,  0.5f,  0.0f,
-      1.0f,  0.0f,  1.0f,  0.0f,  0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-      1.0f,  0.0f,  -0.5f, 0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
-      -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.0f,  1.0f};
+      -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.5f,  0.5f,  -0.5f,
+      0.0f,  1.0f,  0.0f,  0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+      0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  -0.5f, 0.5f,  0.5f,
+      0.0f,  1.0f,  0.0f,  -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f};
 
   uint8_t init() {
     // init glfw
@@ -127,32 +121,55 @@ private:
       return 2;
     }
 
+    // Conway's Game of Life
+    std::array<std::array<bool, GRID_SIZE>, GRID_SIZE> grid{};
+
+    // Place a glider at position (1,2), (2,3), (3,4), (4,5), (3,6)
+    grid[1][2] = true;
+    grid[2][3] = true;
+    grid[3][4] = true;
+    grid[4][5] = true;
+    grid[3][6] = true;
+
+    // Place a blinker oscillator at position (20,30), (21,30), (22,30)
+    grid[20][30] = true;
+    grid[21][30] = true;
+    grid[22][30] = true;
+
+    // Place a lightweight spaceship at position (40,10), (41,11), (42,12),
+    // (43,13), (44,14), (45,15)
+    grid[40][10] = true;
+    grid[41][11] = true;
+    grid[42][12] = true;
+    grid[43][13] = true;
+    grid[44][14] = true;
+    grid[45][15] = true;
+
+    grids.push_back(grid);
+
+    // init shaders
     shader.init("shader.vert", "shader.frag");
-    light_shader.init("light_shader.vert", "light_shader.frag");
-
-    backpack.loadModel("backpack/backpack.obj");
-
-    // light VAO
-    glGenVertexArrays(1, &light_VAO);
-    glBindVertexArray(light_VAO);
 
     // vertex buffer
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+    // object VAO
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                           (void *)0);
     glEnableVertexAttribArray(0);
 
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // opengl state machine
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glEnable(GL_DEPTH_TEST);
-
-    stbi_set_flip_vertically_on_load(true);
 
     return 0;
   }
@@ -171,93 +188,59 @@ private:
       time = glfwGetTime();
       delta_time = time - old_time;
 
+      // Conway's Game of Life
+      timer -= delta_time;
+      if (timer < 0.0f) {
+        timer = 1.0f;
+        game_of_life(grids[-1]);
+      }
+
       // vector and matrix manipulation
-      model = glm::mat4(1.0f);
       view = glm::lookAt(camera_pos, camera_pos + camera_front, camera_up);
 
       projection = glm::perspective(glm::radians(fov),
                                     static_cast<float>(SCR_WIDTH) / SCR_HEIGHT,
                                     0.1f, 100.0f);
 
-      // light pos
-      glm::vec3 light_pos = glm::vec3(0.0f, 0.0f, 0.0f);
-      light_pos.x = 1.0f + sin(time) * 2.0f;
-      light_pos.y = sin(time / 2.0f) * 1.0f;
-
-      // light color
-      glm::vec3 light_color;
-      light_color.x = sin(time * 2.0f);
-      light_color.y = sin(time * 0.7f);
-      light_color.z = sin(time * 1.3f);
-
-      glm::vec3 diffuse_color = light_color * glm::vec3(0.5f);
-      glm::vec3 ambient_color = diffuse_color * glm::vec3(0.2f);
-
-      // static light
-      glm::vec3 static_light_diffuse = glm::vec3(0.5f);
-      glm::vec3 static_light_ambient = glm::vec3(0.05f);
-
       // setting object shader values
       shader.use();
 
       // material
-      shader.setFloat("material.shininess", 32.0f);
+      shader.setVec3("material.ambient", glm::vec3(0.3f));
+      shader.setVec3("material.diffuse", glm::vec3(0.9f));
+      shader.setVec3("material.specular", glm::vec3(0.75f));
+      shader.setFloat("material.shininess", 8.0f);
 
       // directional light
-      shader.setVec3("dir_light.direction", -0.2f, -1.0f, -0.3f);
-      shader.setVec3("dir_light.ambient", glm::vec3(0.01f));
-      shader.setVec3("dir_light.diffuse", glm::vec3(0.1f));
-      shader.setVec3("dir_light.specular", 0.5f, 0.5f, 0.5f);
-
-      // spot light
-      shader.setVec3("spot_light.position", camera_pos);
-      shader.setVec3("spot_light.direction", camera_front);
-      shader.setVec3("spot_light.ambient", 0.0f, 0.0f, 0.0f);
-      shader.setVec3("spot_light.diffuse", 1.0f, 1.0f, 1.0f);
-      shader.setVec3("spot_light.specular", 1.0f, 1.0f, 1.0f);
-      shader.setFloat("spot_light.constant", 1.0f);
-      shader.setFloat("spot_light.linear", 0.09f);
-      shader.setFloat("spot_light.quadratic", 0.032f);
-      shader.setFloat("spot_light.cut_off", glm::cos(glm::radians(12.5f)));
-      shader.setFloat("spot_light.outer_cut_off",
-                      glm::cos(glm::radians(15.0f)));
-
-      shader.setVec3("point_light.position", light_pos);
-      shader.setVec3("point_light.ambient", ambient_color);
-      shader.setVec3("point_light.diffuse", diffuse_color);
-      shader.setVec3("point_light.specular", 1.0f, 1.0f, 1.0f);
-      shader.setFloat("point_light.constant", 1.0f);
-      shader.setFloat("point_light.linear", 0.09f);
-      shader.setFloat("point_light.quadratic", 0.032f);
+      shader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+      shader.setVec3("light.ambient", glm::vec3(0.75f));
+      shader.setVec3("light.diffuse", glm::vec3(1.0f));
+      shader.setVec3("light.specular", glm::vec3(1.0f));
 
       // camera
       shader.setVec3("camera_pos", camera_pos);
 
       // matrices
-      shader.setMat4("model", model);
-      shader.setMat3("normal_matrix", glm::transpose(glm::inverse(model)));
       shader.setMat4("view", view);
       shader.setMat4("projection", projection);
 
       // draw object
-      backpack.Draw(shader);
+      glBindVertexArray(VAO);
+      for (uint32_t i = grids.size(); i-- > 0;) {
+        for (uint32_t j = 0; j < GRID_SIZE; j++) {
+          for (uint32_t k = 0; k < GRID_SIZE; k++) {
+            if (grids[i][j][k]) {
+              model = glm::mat4(1.0f);
+              model = glm::translate(model, {j, (grids.size() - i) * -1.0f, k});
+              shader.setMat4("model", model);
+              shader.setMat3("normal_matrix",
+                             glm::transpose(glm::inverse(model)));
 
-      // set light shader values
-      light_shader.use();
-      light_shader.setMat4("view", view);
-      light_shader.setMat4("projection", projection);
-      light_shader.setVec3("light_color", static_light_diffuse);
-
-      // manipulate light model matrix
-      model = glm::mat4(1.0f);
-      model = glm::translate(model, light_pos + glm::vec3(0.0f, 0.0f, 3.0f));
-      model = glm::scale(model, glm::vec3(0.2f));
-      light_shader.setMat4("model", model);
-      light_shader.setVec3("light_color", light_color);
-
-      // draw light
-      glBindVertexArray(light_VAO);
-      glDrawArrays(GL_TRIANGLES, 0, 36);
+              glDrawArrays(GL_TRIANGLES, 0, 36);
+            }
+          }
+        }
+      }
 
       // render frame
       glfwSwapBuffers(window);
@@ -265,7 +248,7 @@ private:
   }
 
   void free_resources() {
-    glDeleteVertexArrays(1, &light_VAO);
+    glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glfwTerminate();
   }
@@ -348,6 +331,37 @@ private:
       ths->fov = 1.0f;
     if (ths->fov > 90.0f)
       ths->fov = 90.0f;
+  }
+
+  void game_of_life(std::array<std::array<bool, GRID_SIZE>, GRID_SIZE> &grid) {
+    std::array<std::array<bool, GRID_SIZE>, GRID_SIZE> temp_grid;
+
+    for (uint32_t i = 0; i < GRID_SIZE; ++i) {
+      for (uint32_t j = 0; j < GRID_SIZE; ++j) {
+        uint32_t aliveNeighbors = 0;
+
+        for (uint32_t dx = -1; dx <= 1; ++dx) {
+          for (uint32_t dy = -1; dy <= 1; ++dy) {
+            uint32_t x = i + dx;
+            uint32_t y = j + dy;
+
+            if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE &&
+                (dx != 0 || dy != 0)) {
+              aliveNeighbors += grid[x][y];
+            }
+          }
+        }
+
+        if (grid[i][j] == 1 && aliveNeighbors < 2 && aliveNeighbors > 3)
+          temp_grid[i][j] = 0;
+        else if (grid[i][j] == 0 && aliveNeighbors == 3)
+          temp_grid[i][j] = 1;
+        else
+          temp_grid[i][j] = grid[i][j];
+      }
+    }
+
+    grids.push_back(temp_grid);
   }
 };
 
