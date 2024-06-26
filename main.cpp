@@ -20,7 +20,7 @@ private:
   GLFWwindow *window;
 
   // camera vertices
-  glm::vec3 camera_pos = glm::vec3(10.0f, 10.0f, 10.0f);
+  glm::vec3 camera_pos = glm::vec3(0.0f, 10.0f, 0.0f);
   glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
   constexpr static glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
   constexpr static float camera_speed = 5.0f;
@@ -30,7 +30,7 @@ private:
   float last_y = SCR_HEIGHT / 2.0f;
   float yaw = 0.0f, pitch = 0.0f;
   bool first_mouse_movement = true;
-  float fov = 45.0f;
+  float fov = 90.0f;
 
   // time
   constexpr static float TIMER_TIME = 0.1f;
@@ -52,7 +52,7 @@ private:
 
   // Conway's Game of Life
   constexpr static uint32_t GRID_SIZE = 50;
-  constexpr static uint32_t GRID_NUM = 20;
+  constexpr static uint32_t GRID_NUM = 100;
   std::array<std::array<std::array<bool, GRID_SIZE>, GRID_SIZE>, GRID_NUM>
       grids{};
 
