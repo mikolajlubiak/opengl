@@ -9,7 +9,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/matrix.hpp>
 #include <iostream>
-#include <vector>
 
 class lrnOpenGL {
 private:
@@ -21,7 +20,7 @@ private:
   GLFWwindow *window;
 
   // camera vertices
-  glm::vec3 camera_pos = glm::vec3(0.0f, 0.0f, 15.0f);
+  glm::vec3 camera_pos = glm::vec3(-10.0f, 10.0f, -5.0f);
   glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
   constexpr static glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
   constexpr static float camera_speed = 5.0f;
@@ -37,7 +36,7 @@ private:
   float time = glfwGetTime();
   float old_time;
   float delta_time;
-  float timer = 1.0f;
+  float timer = 0.2f;
 
   // matrices
   glm::mat4 model;
@@ -52,7 +51,9 @@ private:
 
   // Conway's Game of Life
   constexpr static uint32_t GRID_SIZE = 50;
-  std::vector<std::array<std::array<bool, GRID_SIZE>, GRID_SIZE>> grids{};
+  constexpr static uint32_t GRID_NUM = 20;
+  std::array<std::array<std::array<bool, GRID_SIZE>, GRID_SIZE>, GRID_NUM>
+      grids{};
 
   // cube
   constexpr static float cube[] = {
@@ -145,7 +146,7 @@ private:
     grid[44][14] = true;
     grid[45][15] = true;
 
-    grids.push_back(grid);
+    grids[0] = grid;
 
     // init shaders
     shader.init("shader.vert", "shader.frag");
@@ -171,6 +172,21 @@ private:
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glEnable(GL_DEPTH_TEST);
 
+    // setting object shader values
+    shader.use();
+
+    // material
+    shader.setVec3("material.ambient", glm::vec3(0.3f));
+    shader.setVec3("material.diffuse", glm::vec3(0.9f));
+    shader.setVec3("material.specular", glm::vec3(0.75f));
+    shader.setFloat("material.shininess", 8.0f);
+
+    // directional light
+    shader.setVec3("light.direction", 0.2f, -1.0f, 0.5f);
+    shader.setVec3("light.ambient", glm::vec3(0.75f));
+    shader.setVec3("light.diffuse", glm::vec3(1.0f));
+    shader.setVec3("light.specular", glm::vec3(1.0f));
+
     return 0;
   }
 
@@ -191,8 +207,8 @@ private:
       // Conway's Game of Life
       timer -= delta_time;
       if (timer < 0.0f) {
-        timer = 1.0f;
-        game_of_life(grids[-1]);
+        timer = 0.2f;
+        game_of_life();
       }
 
       // vector and matrix manipulation
@@ -202,21 +218,6 @@ private:
                                     static_cast<float>(SCR_WIDTH) / SCR_HEIGHT,
                                     0.1f, 100.0f);
 
-      // setting object shader values
-      shader.use();
-
-      // material
-      shader.setVec3("material.ambient", glm::vec3(0.3f));
-      shader.setVec3("material.diffuse", glm::vec3(0.9f));
-      shader.setVec3("material.specular", glm::vec3(0.75f));
-      shader.setFloat("material.shininess", 8.0f);
-
-      // directional light
-      shader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
-      shader.setVec3("light.ambient", glm::vec3(0.75f));
-      shader.setVec3("light.diffuse", glm::vec3(1.0f));
-      shader.setVec3("light.specular", glm::vec3(1.0f));
-
       // camera
       shader.setVec3("camera_pos", camera_pos);
 
@@ -225,13 +226,12 @@ private:
       shader.setMat4("projection", projection);
 
       // draw object
-      glBindVertexArray(VAO);
-      for (uint32_t i = grids.size(); i-- > 0;) {
+      for (uint32_t i = 0; i < GRID_NUM; i++) {
         for (uint32_t j = 0; j < GRID_SIZE; j++) {
           for (uint32_t k = 0; k < GRID_SIZE; k++) {
             if (grids[i][j][k]) {
               model = glm::mat4(1.0f);
-              model = glm::translate(model, {j, (grids.size() - i) * -1.0f, k});
+              model = glm::translate(model, {j, i * -1.0f, k});
               shader.setMat4("model", model);
               shader.setMat3("normal_matrix",
                              glm::transpose(glm::inverse(model)));
@@ -333,7 +333,11 @@ private:
       ths->fov = 90.0f;
   }
 
-  void game_of_life(std::array<std::array<bool, GRID_SIZE>, GRID_SIZE> &grid) {
+  void game_of_life() {
+    std::array<std::array<std::array<bool, GRID_SIZE>, GRID_SIZE>, GRID_NUM>::iterator it = grids.begin();
+    std::advance(it, -1);
+    std::copy(it, it+GRID_NUM, grids.begin());
+
     std::array<std::array<bool, GRID_SIZE>, GRID_SIZE> temp_grid;
 
     for (uint32_t i = 0; i < GRID_SIZE; ++i) {
@@ -347,21 +351,21 @@ private:
 
             if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE &&
                 (dx != 0 || dy != 0)) {
-              aliveNeighbors += grid[x][y];
+              aliveNeighbors += grids[-1][x][y];
             }
           }
         }
 
-        if (grid[i][j] == 1 && aliveNeighbors < 2 && aliveNeighbors > 3)
+        if (grids[-1][i][j] == 1 && (aliveNeighbors < 2 || aliveNeighbors > 3))
           temp_grid[i][j] = 0;
-        else if (grid[i][j] == 0 && aliveNeighbors == 3)
+        else if (grids[-1][i][j] == 0 && aliveNeighbors == 3)
           temp_grid[i][j] = 1;
         else
-          temp_grid[i][j] = grid[i][j];
+          temp_grid[i][j] = grids[-1][i][j];
       }
     }
 
-    grids.push_back(temp_grid);
+    grids[0] = temp_grid;
   }
 };
 
