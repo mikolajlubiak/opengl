@@ -20,7 +20,7 @@ private:
   GLFWwindow *window;
 
   // camera vertices
-  glm::vec3 camera_pos = glm::vec3(-10.0f, 10.0f, -5.0f);
+  glm::vec3 camera_pos = glm::vec3(10.0f, 10.0f, 10.0f);
   glm::vec3 camera_front = glm::vec3(0.0f, 0.0f, -1.0f);
   constexpr static glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
   constexpr static float camera_speed = 5.0f;
@@ -33,10 +33,11 @@ private:
   float fov = 45.0f;
 
   // time
+  constexpr static float TIMER_TIME = 0.1f;
   float time = glfwGetTime();
   float old_time;
   float delta_time;
-  float timer = 0.2f;
+  float timer = TIMER_TIME;
 
   // matrices
   glm::mat4 model;
@@ -125,26 +126,14 @@ private:
     // Conway's Game of Life
     std::array<std::array<bool, GRID_SIZE>, GRID_SIZE> grid{};
 
-    // Place a glider at position (1,2), (2,3), (3,4), (4,5), (3,6)
-    grid[1][2] = true;
-    grid[2][3] = true;
-    grid[3][4] = true;
-    grid[4][5] = true;
-    grid[3][6] = true;
-
-    // Place a blinker oscillator at position (20,30), (21,30), (22,30)
-    grid[20][30] = true;
-    grid[21][30] = true;
-    grid[22][30] = true;
-
-    // Place a lightweight spaceship at position (40,10), (41,11), (42,12),
-    // (43,13), (44,14), (45,15)
-    grid[40][10] = true;
-    grid[41][11] = true;
-    grid[42][12] = true;
-    grid[43][13] = true;
-    grid[44][14] = true;
-    grid[45][15] = true;
+    // Acorn
+    grid[20][20] = true;
+    grid[22][19] = true;
+    grid[19][18] = true;
+    grid[20][18] = true;
+    grid[23][18] = true;
+    grid[24][18] = true;
+    grid[25][18] = true;
 
     grids[0] = grid;
 
@@ -207,7 +196,8 @@ private:
       // Conway's Game of Life
       timer -= delta_time;
       if (timer < 0.0f) {
-        timer = 0.2f;
+        timer = TIMER_TIME;
+
         game_of_life();
       }
 
@@ -226,12 +216,12 @@ private:
       shader.setMat4("projection", projection);
 
       // draw object
-      for (uint32_t i = 0; i < GRID_NUM; i++) {
-        for (uint32_t j = 0; j < GRID_SIZE; j++) {
-          for (uint32_t k = 0; k < GRID_SIZE; k++) {
+      for (uint8_t i = 0; i < GRID_NUM; i++) {
+        for (uint16_t j = 0; j < GRID_SIZE; j++) {
+          for (uint16_t k = 0; k < GRID_SIZE; k++) {
             if (grids[i][j][k]) {
               model = glm::mat4(1.0f);
-              model = glm::translate(model, {j, i * -1.0f, k});
+              model = glm::translate(model, {j, -i, k});
               shader.setMat4("model", model);
               shader.setMat3("normal_matrix",
                              glm::transpose(glm::inverse(model)));
@@ -334,34 +324,35 @@ private:
   }
 
   void game_of_life() {
-    std::array<std::array<std::array<bool, GRID_SIZE>, GRID_SIZE>, GRID_NUM>::iterator it = grids.begin();
+    std::array<std::array<std::array<bool, GRID_SIZE>, GRID_SIZE>,
+               GRID_NUM>::iterator it = grids.begin();
     std::advance(it, -1);
-    std::copy(it, it+GRID_NUM, grids.begin());
+    std::copy(it, it + GRID_NUM, grids.begin());
 
-    std::array<std::array<bool, GRID_SIZE>, GRID_SIZE> temp_grid;
+    std::array<std::array<bool, GRID_SIZE>, GRID_SIZE> temp_grid{};
 
-    for (uint32_t i = 0; i < GRID_SIZE; ++i) {
-      for (uint32_t j = 0; j < GRID_SIZE; ++j) {
-        uint32_t aliveNeighbors = 0;
+    for (uint16_t i = 0; i < GRID_SIZE; ++i) {
+      for (uint16_t j = 0; j < GRID_SIZE; ++j) {
+        uint8_t aliveNeighbors = 0;
 
-        for (uint32_t dx = -1; dx <= 1; ++dx) {
-          for (uint32_t dy = -1; dy <= 1; ++dy) {
-            uint32_t x = i + dx;
-            uint32_t y = j + dy;
+        for (int8_t dx = -1; dx <= 1; dx++) {
+          for (int8_t dy = -1; dy <= 1; dy++) {
+            int32_t x = i + dx;
+            int32_t y = j + dy;
 
             if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE &&
                 (dx != 0 || dy != 0)) {
-              aliveNeighbors += grids[-1][x][y];
+              aliveNeighbors += grids[1][x][y];
             }
           }
         }
 
-        if (grids[-1][i][j] == 1 && (aliveNeighbors < 2 || aliveNeighbors > 3))
-          temp_grid[i][j] = 0;
-        else if (grids[-1][i][j] == 0 && aliveNeighbors == 3)
-          temp_grid[i][j] = 1;
+        if (grids[1][i][j] == 1 && (aliveNeighbors < 2 || aliveNeighbors > 3))
+          temp_grid[i][j] = false;
+        else if (grids[1][i][j] == 0 && aliveNeighbors == 3)
+          temp_grid[i][j] = true;
         else
-          temp_grid[i][j] = grids[-1][i][j];
+          temp_grid[i][j] = grids[1][i][j];
       }
     }
 
