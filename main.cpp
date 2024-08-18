@@ -292,7 +292,7 @@ private:
     ths->last_x = xpos;
     ths->last_y = ypos;
 
-    constexpr const float sensitivity = 0.1f;
+    constexpr float sensitivity = 0.1f;
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 
