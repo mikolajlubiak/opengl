@@ -18,6 +18,12 @@ Tested on Linux.
 - `make debug`
 - `./opengl`
 
+## Other branches
+
+| Branch | Description |
+|--------|-------------|
+| [`conways-game-of-life`](https://github.com/mikolajlubiak/opengl/tree/conways-game-of-life) | Conway's Game of Life rendered in 3D — the simulation runs on a 2D grid while each successive generation is stacked along the Y axis, making game history the third spatial dimension. |
+
 ## Controls
 
 | Key / Input        | Action                  |
