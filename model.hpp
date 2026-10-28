@@ -7,7 +7,7 @@
 #include <assimp/scene.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <stb_image.h>
+#include <stb/stb_image.h>
 
 #include "mesh.hpp"
 #include "shader.hpp"

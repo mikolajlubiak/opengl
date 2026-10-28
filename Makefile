@@ -4,4 +4,4 @@ debug:
 	g++ *.cpp *.c $(LDFLAGS) --debug -o opengl
 
 clean:
-	rm a.out
+	rm -f opengl
