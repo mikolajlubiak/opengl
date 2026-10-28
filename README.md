@@ -1,6 +1,6 @@
 # opengl
 
-Me learning OpenGL — renders a 3D model with dynamic lighting (directional, point, and spot lights) and a free-look camera.
+An OpenGL 4.6 core-profile renderer: it loads a textured 3D model with Assimp and lights it with directional, point and spot lights (the point light moves and changes color), viewed through a free-look camera.
 
 ## Build
 
@@ -8,11 +8,11 @@ Tested on Linux.
 
 - Install necessary packages (different commands based on your distribution)
   - Fedora:
-    - `sudo dnf install gcc-c++ glfw glfw-devel glm-devel assimp assimp-devel`
+    - `sudo dnf install gcc-c++ glfw glfw-devel glm-devel assimp assimp-devel stb_image-devel`
   - Arch:
-    - `sudo pacman -S --needed gcc glfw glm assimp`
+    - `sudo pacman -S --needed gcc glfw glm assimp stb`
   - Ubuntu:
-    - `sudo apt install g++ libglfw3-dev libglm-dev libassimp-dev`
+    - `sudo apt install g++ make libglfw3-dev libglm-dev libassimp-dev libstb-dev`
 - `git clone https://github.com/mikolajlubiak/opengl`
 - `cd opengl`
 - `make debug`
